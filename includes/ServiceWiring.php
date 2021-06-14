@@ -2,6 +2,7 @@
 
 namespace MediaWiki\Extensions\PageViewInfo;
 
+use Hooks;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use ObjectCache;
@@ -15,8 +16,7 @@ return [
 		$logger = LoggerFactory::getInstance( 'PageViewInfo' );
 		$cachedDays = max( 30, $extensionConfig->get( 'PageViewApiMaxDays' ) );
 
-		$service = \Hooks::run( 'PageViewInfoGetPageViewService' );
-		if ( !$service || !( $service instanceof PageViewService ) ) {
+		if ( Hooks::run( 'PageViewInfoGetPageViewService', [ &$service ] ) ) {
 			$endpoint = $extensionConfig->get( 'PageViewInfoWikimediaEndpoint' );
 			$project = $extensionConfig->get( 'PageViewInfoWikimediaDomain' )
 				?: $mainConfig->get( 'ServerName' );
