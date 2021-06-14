@@ -16,16 +16,18 @@ return [
 		$logger = LoggerFactory::getInstance( 'PageViewInfo' );
 		$cachedDays = max( 30, $extensionConfig->get( 'PageViewApiMaxDays' ) );
 
-		if ( Hooks::run( 'PageViewInfoGetPageViewService', [ &$service ] ) ) {
-			$endpoint = $extensionConfig->get( 'PageViewInfoWikimediaEndpoint' );
-			$project = $extensionConfig->get( 'PageViewInfoWikimediaDomain' )
-				?: $mainConfig->get( 'ServerName' );
+		$endpoint = $extensionConfig->get( 'PageViewInfoWikimediaEndpoint' );
+		$project = $extensionConfig->get( 'PageViewInfoWikimediaDomain' )
+			?: $mainConfig->get( 'ServerName' );
 
-			$service = new WikimediaPageViewService( $endpoint, [ 'project' => $project ],
-				$extensionConfig->get( 'PageViewInfoWikimediaRequestLimit' ) );
-			$service->setLogger( $logger );
-			$service->setOriginalRequest( RequestContext::getMain()->getRequest() );
-		}
+		$service = new WikimediaPageViewService( $endpoint, [ 'project' => $project ],
+			$extensionConfig->get( 'PageViewInfoWikimediaRequestLimit' ) );
+		$service->setLogger( $logger );
+		$service->setOriginalRequest( RequestContext::getMain()->getRequest() );
+
+		// Give extensions a chance to use other PageViewService than WikimediaPageViewService
+		Hooks::run( 'PageViewInfoAfterPageViewService', [ &$service ] );
+
 		$cachedService = new CachedPageViewService( $service, $cache );
 		$cachedService->setCachedDays( $cachedDays );
 		$cachedService->setLogger( $logger );
